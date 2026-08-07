@@ -301,7 +301,7 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
 
         player.addObserver(this)
         player.initialize(filesDir.path, cacheDir.path)
-        player.playFile(filepath)
+        playFileMaybeResolved(filepath)
 
         mediaSession = initMediaSession()
         updateMediaSession()
@@ -384,15 +384,86 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
 
         if (!activityIsForeground && didResumeBackgroundPlayback) {
             if (this.newIntentReplace) {
-                MPVLib.command(arrayOf("loadfile", filepath, "replace"))
+                loadFileResolved(filepath, "replace")
                 showToast(getString(R.string.notice_file_play))
             } else {
-                MPVLib.command(arrayOf("loadfile", filepath, "append"))
+                loadFileResolved(filepath, "append")
                 showToast(getString(R.string.notice_file_appended))
             }
             moveTaskToBack(true)
         } else {
-            MPVLib.command(arrayOf("loadfile", filepath))
+            loadFileResolved(filepath, null)
+        }
+    }
+
+    // Resolve web page URLs (YouTube etc.) to direct media URLs with yt-dlp
+    // before handing them to mpv. Non-network URLs are played directly.
+
+    private fun isNetworkUrl(path: String): Boolean {
+        return path.startsWith("http://") || path.startsWith("https://")
+    }
+
+    private fun playFileMaybeResolved(filepath: String) {
+        if (!isNetworkUrl(filepath) || !YTDLResolver.isEnabled(this)) {
+            // Note: playFile() only stores the path, which is consumed when the mpv surface
+            // becomes ready. Non-network files arrive before that happens, so it's fine here.
+            player.playFile(filepath)
+            return
+        }
+        showToast(getString(R.string.ytdl_resolving))
+        YTDLResolver.resolve(this, filepath) { result ->
+            runOnUiThread {
+                result.fold(
+                    onSuccess = { resolved ->
+                        Log.i(TAG, "yt-dlp resolved: $filepath -> ${resolved.primary}")
+                        MPVLib.command(arrayOf("loadfile", resolved.primary))
+                        resolved.secondary?.let { audio ->
+                            Log.i(TAG, "yt-dlp audio track: $audio")
+                            // mpv's audio-file/external-files options are not reliably applied on
+                            // this build; audio-add attaches the stream as a selected audio track.
+                            MPVLib.command(arrayOf("audio-add", audio, "select"))
+                        }
+                    },
+                    onFailure = { e ->
+                        Log.w(TAG, "yt-dlp failed, falling back to original URL", e)
+                        showToast(getString(R.string.ytdl_failed, e.message ?: ""))
+                        MPVLib.command(arrayOf("loadfile", filepath))
+                    }
+                )
+            }
+        }
+    }
+
+    private fun loadFileResolved(filepath: String, mode: String?) {
+        val cmd = { path: String ->
+            if (mode != null)
+                MPVLib.command(arrayOf("loadfile", path, mode))
+            else
+                MPVLib.command(arrayOf("loadfile", path))
+        }
+        if (!isNetworkUrl(filepath) || !YTDLResolver.isEnabled(this)) {
+            cmd(filepath)
+            return
+        }
+        showToast(getString(R.string.ytdl_resolving))
+        YTDLResolver.resolve(this, filepath) { result ->
+            runOnUiThread {
+                result.fold(
+                    onSuccess = { resolved ->
+                        Log.i(TAG, "yt-dlp resolved: $filepath -> ${resolved.primary}")
+                        cmd(resolved.primary)
+                        resolved.secondary?.let { audio ->
+                            Log.i(TAG, "yt-dlp audio track: $audio")
+                            MPVLib.command(arrayOf("audio-add", audio, "select"))
+                        }
+                    },
+                    onFailure = { e ->
+                        Log.w(TAG, "yt-dlp failed, falling back to original URL", e)
+                        showToast(getString(R.string.ytdl_failed, e.message ?: ""))
+                        cmd(filepath)
+                    }
+                )
+            }
         }
     }
 

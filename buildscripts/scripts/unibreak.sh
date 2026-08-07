@@ -16,6 +16,9 @@ fi
 mkdir -p $build
 cd $build
 
+# git checkouts of libunibreak have no pre-generated configure script
+[ -f ../configure ] || (cd .. && autoreconf -i)
+
 ../configure \
 	--host=$ndk_triple --with-pic \
 	--enable-static --disable-shared

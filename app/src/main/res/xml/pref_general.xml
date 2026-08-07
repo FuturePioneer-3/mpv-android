@@ -62,4 +62,26 @@
         android:summary="@string/pref_new_intent_replace_summary"
         android:title="@string/pref_new_intent_replace_title" />
 
+    <PreferenceCategory android:title="@string/pref_header_network">
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            app:iconSpaceReserved="false"
+            android:key="ytdl_enabled"
+            android:summary="@string/pref_ytdl_enabled_summary"
+            android:title="@string/pref_ytdl_enabled_title" />
+
+        <Preference
+            app:iconSpaceReserved="false"
+            android:key="ytdl_cookies_pick"
+            android:title="@string/pref_cookies_title"
+            android:summary="@string/pref_cookies_summary_none" />
+
+        <Preference
+            app:iconSpaceReserved="false"
+            android:key="ytdl_cookies_clear"
+            android:title="@string/pref_cookies_clear" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

@@ -53,6 +53,23 @@
     <string name="notice_show_media_files">Showing media files only</string>
     <string name="option_remember_choice">Remember choice on next startup</string>
     <string name="uri_invalid_protocol">Invalid protocol</string>
+    <string name="ytdl_resolving">Resolving link with yt-dlp…</string>
+    <string name="ytdl_failed">yt-dlp failed (%1$s), playing the original URL</string>
+
+    <!-- yt-dlp / network playback settings -->
+    <string name="pref_header_network">Network playback</string>
+    <string name="pref_header_network_summary">yt-dlp link resolution and cookies</string>
+    <string name="pref_ytdl_enabled_title">Resolve links with yt-dlp</string>
+    <string name="pref_ytdl_enabled_summary">Resolve YouTube and other supported sites to direct media URLs</string>
+    <string name="pref_cookies_title">Cookies file</string>
+    <string name="pref_cookies_summary_none">Select a Netscape-format cookies file for private videos</string>
+    <string name="pref_cookies_summary_set">Using: %1$s</string>
+    <string name="pref_cookies_clear">Clear cookies</string>
+    <string name="pref_cookies_cleared">Cookies cleared</string>
+    <string name="pref_cookies_invalid">Could not read the selected file</string>
+    <string name="pref_cookies_pick_title">Select cookies file</string>
+    <string name="ytdl_status_enabled">yt-dlp link resolution enabled</string>
+    <string name="ytdl_status_disabled">yt-dlp link resolution disabled</string>
 
     <!-- Action buttons -->
     <string name="switch_orientation">Switch orientation</string>

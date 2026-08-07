@@ -52,6 +52,23 @@
     <!-- Action buttons -->
     <string name="option_remember_choice">记住选择于下次启动</string>
     <string name="uri_invalid_protocol">无效的协议</string>
+    <string name="ytdl_resolving">正在用 yt-dlp 解析链接…</string>
+    <string name="ytdl_failed">yt-dlp 解析失败（%1$s），正在播放原链接</string>
+
+    <!-- yt-dlp / network playback settings -->
+    <string name="pref_header_network">网络播放</string>
+    <string name="pref_header_network_summary">yt-dlp 链接解析与 Cookies</string>
+    <string name="pref_ytdl_enabled_title">用 yt-dlp 解析链接</string>
+    <string name="pref_ytdl_enabled_summary">将 YouTube 等网站的链接解析为直链后播放</string>
+    <string name="pref_cookies_title">Cookies 文件</string>
+    <string name="pref_cookies_summary_none">选择 Netscape 格式的 Cookies 文件以播放私密视频</string>
+    <string name="pref_cookies_summary_set">当前使用：%1$s</string>
+    <string name="pref_cookies_clear">清除 Cookies</string>
+    <string name="pref_cookies_cleared">Cookies 已清除</string>
+    <string name="pref_cookies_invalid">无法读取所选文件</string>
+    <string name="pref_cookies_pick_title">选择 Cookies 文件</string>
+    <string name="ytdl_status_enabled">yt-dlp 链接解析已启用</string>
+    <string name="ytdl_status_disabled">yt-dlp 链接解析已禁用</string>
     <string name="switch_orientation">切换显示方向</string>
     <string name="open_external_audio">打开外部音频…</string>
     <string name="open_external_sub">打开外部字幕…</string>

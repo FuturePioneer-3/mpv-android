@@ -71,6 +71,8 @@ class MainScreenFragment : Fragment(R.layout.fragment_main_screen) {
 
         Utils.handleInsetsAsPadding(binding.root)
 
+        updateYtdlStatus()
+
         binding.docBtn.setOnClickListener {
             try {
                 documentTreeOpener.launch(null)
@@ -135,6 +137,7 @@ class MainScreenFragment : Fragment(R.layout.fragment_main_screen) {
 
     override fun onResume() {
         super.onResume()
+        updateYtdlStatus()
         if (firstRun) {
             restoreChoice()
         } else if (returningFromPlayer) {
@@ -142,6 +145,16 @@ class MainScreenFragment : Fragment(R.layout.fragment_main_screen) {
         }
         firstRun = false
         returningFromPlayer = false
+    }
+
+    private fun updateYtdlStatus() {
+        if (::binding.isInitialized) {
+            binding.ytdlStatus.setText(
+                if (YTDLResolver.isEnabled(requireContext()))
+                    R.string.ytdl_status_enabled
+                else R.string.ytdl_status_disabled
+            )
+        }
     }
 
     private fun saveChoice(type: String, data: String? = null) {

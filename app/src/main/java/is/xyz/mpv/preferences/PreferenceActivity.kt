@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,6 +17,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.DynamicColors
 import `is`.xyz.mpv.R
+import `is`.xyz.mpv.YTDLResolver
 
 class PreferenceActivity : AppCompatActivity(),
     PreferenceFragmentCompat.OnPreferenceStartFragmentCallback,
@@ -114,11 +116,62 @@ class PreferenceActivity : AppCompatActivity(),
     }
 
     class GeneralPreference : PreferenceFragmentCompat() {
+        private lateinit var cookiesPick: Preference
+        private lateinit var cookiesClear: Preference
+
+        private val cookiesPicker = registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            if (uri == null) return@registerForActivityResult
+            val name = try {
+                requireContext().contentResolver.query(
+                    uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst())
+                        cursor.getString(0)
+                    else null
+                }
+            } catch (e: Exception) { null }
+            if (YTDLResolver.storeCookiesFile(requireContext(), uri, name)) {
+                updateCookiesSummary()
+            } else {
+                Toast.makeText(requireContext(), R.string.pref_cookies_invalid, Toast.LENGTH_SHORT).show()
+            }
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.pref_general, rootKey)
             // hide Material You on Android 11 or lower
             preferenceManager.findPreference<Preference>("material_you_theming")?.isVisible =
                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+
+            cookiesPick = preferenceManager.findPreference("ytdl_cookies_pick")!!
+            cookiesClear = preferenceManager.findPreference("ytdl_cookies_clear")!!
+
+            cookiesPick.setOnPreferenceClickListener {
+                cookiesPicker.launch(arrayOf("*/*"))
+                true
+            }
+            cookiesClear.setOnPreferenceClickListener {
+                YTDLResolver.clearCookies(requireContext())
+                updateCookiesSummary()
+                Toast.makeText(requireContext(), R.string.pref_cookies_cleared, Toast.LENGTH_SHORT).show()
+                true
+            }
+            updateCookiesSummary()
+        }
+
+        private fun updateCookiesSummary() {
+            val name = YTDLResolver.cookiesDisplayName(requireContext())
+            val path = YTDLResolver.cookiesPath(requireContext())
+            if (name != null && path != null) {
+                cookiesPick.summary = getString(R.string.pref_cookies_summary_set, name)
+                cookiesClear.isEnabled = true
+            } else {
+                cookiesPick.summary = getString(R.string.pref_cookies_summary_none)
+                cookiesClear.isEnabled = false
+            }
         }
     }
 

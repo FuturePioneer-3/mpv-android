@@ -48,22 +48,46 @@ fi
 
 mkdir -p sdk && cd sdk
 
+MIRROR="https://mirrors.cloud.tencent.com/AndroidSDK"
+
 # Android SDK
 if [ ! -d "android-sdk-${os}" ]; then
 	echo "Android SDK not found. Downloading commandline tools."
-	$WGET "https://dl.google.com/android/repository/commandlinetools-${os}-${v_sdk}.zip"
+	$WGET "$MIRROR/commandlinetools-${os}-${v_sdk}.zip"
 	mkdir "android-sdk-${os}"
 	unzip -q -d "android-sdk-${os}" "commandlinetools-${os}-${v_sdk}.zip"
 	rm "commandlinetools-${os}-${v_sdk}.zip"
 fi
-sdkmanager () {
-	local exe="./android-sdk-$os/cmdline-tools/latest/bin/sdkmanager"
-	[ -x "$exe" ] || exe="./android-sdk-$os/cmdline-tools/bin/sdkmanager"
-	"$exe" --sdk_root="${ANDROID_HOME}" "$@"
-}
-echo y | sdkmanager \
-	"platforms;android-${v_sdk_platform}" "build-tools;${v_sdk_build_tools}" \
-	"extras;android;m2repository"
+
+# Android platform & build-tools (downloaded manually, mirror has no sdkmanager-friendly repo)
+if [ ! -d "android-sdk-$os/platforms/android-${v_sdk_platform}" ]; then
+	echo "Downloading platform android-${v_sdk_platform}."
+	$WGET "$MIRROR/platform-${v_sdk_platform}_r02.zip"
+	mkdir -p "android-sdk-$os/platforms"
+	unzip -q -d "android-sdk-$os/platforms" "platform-${v_sdk_platform}_r02.zip"
+	mv "android-sdk-$os/platforms/android-${v_sdk_platform}"* "android-sdk-$os/platforms/android-${v_sdk_platform}"
+	rm "platform-${v_sdk_platform}_r02.zip"
+fi
+if [ ! -d "android-sdk-$os/build-tools/${v_sdk_build_tools}" ]; then
+	echo "Downloading build-tools ${v_sdk_build_tools}."
+	$WGET "$MIRROR/build-tools_r${v_sdk_build_tools}_linux.zip"
+	mkdir -p "android-sdk-$os/build-tools"
+	unzip -q -o -d "android-sdk-$os/build-tools" "build-tools_r${v_sdk_build_tools}_linux.zip"
+	rm "build-tools_r${v_sdk_build_tools}_linux.zip"
+	# new-style zips extract to an API-codename dir (e.g. android-15)
+	cd "android-sdk-$os/build-tools"
+	for d in android-*; do
+		[ -d "$d" ] && mv "$d" "${v_sdk_build_tools}"
+	done
+	cd -
+fi
+if [ ! -d "android-sdk-$os/extras/android/m2repository" ]; then
+	echo "Downloading android m2repository."
+	$WGET "$MIRROR/android_m2repository_r47.zip"
+	mkdir -p "android-sdk-$os/extras/android"
+	unzip -q -d "android-sdk-$os/extras/android" "android_m2repository_r47.zip"
+	rm "android_m2repository_r47.zip"
+fi
 
 # Android NDK (either standalone or installed by SDK)
 if [ -d "android-ndk-${v_ndk}" ]; then
@@ -71,13 +95,9 @@ if [ -d "android-ndk-${v_ndk}" ]; then
 elif [ -d "android-sdk-$os/ndk/${v_ndk_n}" ]; then
 	echo "Creating NDK symlink to SDK."
 	ln -s "android-sdk-$os/ndk/${v_ndk_n}" "android-ndk-${v_ndk}"
-elif [ -z "${os_ndk}" ]; then
-	echo "Downloading NDK with sdkmanager."
-	echo y | sdkmanager "ndk;${v_ndk_n}"
-	ln -s "android-sdk-$os/ndk/${v_ndk_n}" "android-ndk-${v_ndk}"
 else
 	echo "Downloading NDK."
-	$WGET "http://dl.google.com/android/repository/android-ndk-${v_ndk}-${os_ndk}.zip"
+	$WGET "$MIRROR/android-ndk-${v_ndk}-${os_ndk}.zip"
 	unzip -q "android-ndk-${v_ndk}-${os_ndk}.zip"
 	rm "android-ndk-${v_ndk}-${os_ndk}.zip"
 fi

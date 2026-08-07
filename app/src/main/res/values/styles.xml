@@ -34,6 +34,14 @@
         <item name="android:windowBackground">#000000</item>
     </style>
 
+    <!-- theme for main screen -->
+    <style name="AppTheme.MainScreen" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="alertDialogTheme">@style/FilePickerTheme.AlertDialog</item>
+    </style>
+
     <!-- theme for preferences -->
     <style name="AppTheme.Preference" parent="Theme.Material3.DayNight">
         <item name="toolbarStyle">@style/AppTheme.Toolbar.Style</item>
