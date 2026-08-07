@@ -403,6 +403,21 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
         return path.startsWith("http://") || path.startsWith("https://")
     }
 
+    // Bilibili's CDN (mcdn/upos nodes) rejects stream requests with a 403 unless
+    // they carry a browser-like User-Agent AND a bilibili Referer.
+    private fun applyBilibiliHeaders(isBilibili: Boolean) {
+        if (isBilibili) {
+            MPVLib.setOptionString(
+                "user-agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            MPVLib.setOptionString("http-header-fields", "Referer: https://www.bilibili.com/")
+        } else {
+            MPVLib.setOptionString("user-agent", "")
+            MPVLib.setOptionString("http-header-fields", "")
+        }
+    }
+
     private fun playFileMaybeResolved(filepath: String) {
         if (!isNetworkUrl(filepath) || !YTDLResolver.isEnabled(this)) {
             // Note: playFile() only stores the path, which is consumed when the mpv surface
@@ -410,6 +425,8 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
             player.playFile(filepath)
             return
         }
+        val isBili = filepath.contains("bilibili.com") || filepath.contains("b23.tv")
+        applyBilibiliHeaders(isBili)
         showToast(getString(R.string.ytdl_resolving))
         YTDLResolver.resolve(this, filepath) { result ->
             runOnUiThread {
@@ -445,6 +462,8 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
             cmd(filepath)
             return
         }
+        val isBili = filepath.contains("bilibili.com") || filepath.contains("b23.tv")
+        applyBilibiliHeaders(isBili)
         showToast(getString(R.string.ytdl_resolving))
         YTDLResolver.resolve(this, filepath) { result ->
             runOnUiThread {

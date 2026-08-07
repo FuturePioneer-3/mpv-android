@@ -20,6 +20,9 @@ abstract class BaseMPVView(context: Context, attrs: AttributeSet) : SurfaceView(
         /* set normal options (user-supplied config can override) */
         MPVLib.setOptionString("config", "yes")
         MPVLib.setOptionString("config-dir", configDir)
+        // URL resolution is done by our own yt-dlp integration; skip mpv's
+        // built-in ytdl_hook which would probe every http URL with a subprocess.
+        MPVLib.setOptionString("ytdl", "no")
         for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir"))
             MPVLib.setOptionString(opt, cacheDir)
         initOptions()
